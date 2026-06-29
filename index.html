@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Token & Cost Calculator | Developer Tool</title>
+    <meta name="description" content="Estimate token usage and API costs for AI prompts. Supports GPT-4, GPT-3.5, Claude, and more. Free, no sign-up, works in your browser.">
+    <meta name="keywords" content="token cost calculator, AI pricing calculator, GPT-4 cost, Claude cost, developer tools, AI prompt calculator">
+    <meta name="author" content="PromptCost.dev">
+    <meta property="og:title" content="AI Prompt Token & Cost Calculator">
+    <meta property="og:description" content="Estimate token usage and API costs for AI prompts. Supports GPT-4, GPT-3.5, Claude, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://promptcost.dev">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Prompt Token & Cost Calculator">
+    <meta name="twitter:description" content="Estimate token usage and API costs for AI prompts. Free browser tool.">
+    <link rel="canonical" href="https://promptcost.dev">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: #f4f6f8;
+            color: #1a1a2e;
+            line-height: 1.6;
+            padding: 16px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            padding: 24px 20px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        h1 small {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #64748b;
+        }
+        .subhead {
+            color: #475569;
+            margin-bottom: 24px;
+            font-size: 1rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 640px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+            .container {
+                padding: 16px 12px;
+            }
+        }
+        .card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 4px;
+            margin-top: 12px;
+        }
+        label:first-of-type {
+            margin-top: 0;
+        }
+        textarea, select, input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: white;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+        textarea:focus, select:focus, input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.95rem;
+        }
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: #475569;
+        }
+        .stat-value {
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .cost-value {
+            color: #059669;
+            font-weight: 700;
+        }
+        .highlight {
+            background: #ecfdf5;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            border-left: 4px solid #10b981;
+        }
+        .highlight .stat-row {
+            border-bottom-color: #d1fae5;
+        }
+        .model-badge {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #4338ca;
+            font-size: 0.75rem;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            margin-left: 6px;
+        }
+        .ad-placeholder {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            border: 1px dashed #cbd5e1;
+            margin-top: 24px;
+        }
+        .ad-placeholder a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .ad-placeholder a:hover {
+            text-decoration: underline;
+        }
+        .affiliate-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+        .affiliate-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #0f172a;
+        }
+        .affiliate-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .affiliate-links a {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #cbd5e1;
+            text-decoration: none;
+            color: #1e293b;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .affiliate-links a:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .privacy-note {
+            margin-top: 24px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 16px;
+        }
+        .footer-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .reset-btn {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: #475569;
+            transition: 0.2s;
+        }
+        .reset-btn:hover {
+            background: #e2e8f0;
+        }
+        .inline-flex {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .input-hint {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .token-count-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>
+            ⚡ AI Prompt Token & Cost Calculator
+            <small>v1.0</small>
+        </h1>
+        <div class="subhead">Estimate token usage and API costs for any prompt. Supports GPT-4, GPT-3.5, Claude, Gemini, and more.</div>
+    </header>
+
+    <div class="grid">
+        <!-- Input Section -->
+        <div class="card">
+            <h2>📝 Prompt</h2>
+            <label for="prompt">Enter your prompt text</label>
+            <textarea id="prompt" placeholder="Paste your prompt here... e.g. 'Explain quantum computing in simple terms...'">Explain quantum computing in simple terms. Focus on superposition and entanglement.</textarea>
+            <div class="input-hint" id="charCount">Characters: 0 | Estimated tokens: 0</div>
+
+            <label for="model">Model</label>
+            <select id="model">
+                <option value="gpt4" data-cost-in="0.03" data-cost-out="0.06">GPT-4 (8K) — $0.03 / $0.06</option>
+                <option value="gpt4turbo" data-cost-in="0.01" data-cost-out="0.03" selected>GPT-4 Turbo — $0.01 / $0.03</option>
+                <option value="gpt35" data-cost-in="0.0015" data-cost-out="0.002">GPT-3.5 Turbo — $0.0015 / $0.002</option>
+                <option value="claude3opus" data-cost-in="0.015" data-cost-out="0.075">Claude 3 Opus — $0.015 / $0.075</option>
+                <option value="claude3sonnet" data-cost-in="0.003" data-cost-out="0.015">Claude 3 Sonnet — $0.003 / $0.015</option>
+                <option value="claude3haiku" data-cost-in="0.00025" data-cost-out="0.00125">Claude 3 Haiku — $0.00025 / $0.00125</option>
+                <option value="gemini15pro" data-cost-in="0.0035" data-cost-out="0.0105">Gemini 1.5 Pro — $0.0035 / $0.0105</option>
+                <option value="gemini15flash" data-cost-in="0.00035" data-cost-out="0.00105">Gemini 1.5 Flash — $0.00035 / $0.00105</option>
+                <option value="commandr" data-cost-in="0.015" data-cost-out="0.015">Command R+ — $0.015 / $0.015</option>
+            </select>
+
+            <label for="outputTokens">Expected output tokens (approx.)</label>
+            <input type="number" id="outputTokens" value="500" min="0" step="50">
+
+            <div class="inline-flex" style="margin-top: 12px;">
+                <button class="reset-btn" id="resetBtn">↺ Reset to defaults</button>
+                <span class="token-count-badge" id="liveTokenEstimate">~0 tokens</span>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card">
+            <h2>📊 Cost Estimate</h2>
+            <div id="results">
+                <div class="stat-row">
+                    <span class="stat-label">Input tokens</span>
+                    <span class="stat-value" id="inputTokens">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Output tokens</span>
+                    <span class="stat-value" id="outputTokensDisplay">500</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total tokens</span>
+                    <span class="stat-value" id="totalTokens">0</span>
+                </div>
+                <div class="highlight">
+                    <div class="stat-row">
+                        <span class="stat-label">💰 Input cost</span>
+                        <span class="stat-value cost-value" id="inputCost">$0.0000</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">💰 Output cost</span>
+                        <span class="stat-value cost-value" id="outputCost">$0.0000</span>
+                    </div>
+                    <div class="stat-row" style="font-weight: 700;">
+                        <span class="stat-label">💵 Total cost</span>
+                        <span class="stat-value cost-value" id="totalCost">$0.0000</span>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.8rem; color: #64748b;">
+                    <span>Model: </span><span id="modelNameDisplay">GPT-4 Turbo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ad Placeholder -->
+    <div class="ad-placeholder">
+        📢 <strong>Sponsored</strong> — Build faster with <a href="#" onclick="reportEvent('ad_click', {ad:'sponsored_link'}); return false;">AI API Hub</a> — compare prices across providers. 
+        <span style="display:block; margin-top:4px;">(Ad placeholder — your message here)</span>
+    </div>
+
+    <!-- Affiliate / Resource Section -->
+    <div class="affiliate-section">
+        <h3>🔗 Recommended Resources</h3>
+        <div class="affiliate-links">
+            <a href="#" onclick="reportEvent('affiliate_click', {resource:'openai'}); return false;">OpenAI API</a>
+            <a href="#" onclick="reportEvent('affiliate_click', {resource:'anthropic'}); return false;">Anthropic Claude</a>
+            <a href="#" onclick="reportEvent('affiliate_click', {resource:'google_ai'}); return false;">Google Gemini</a>
+            <a href="#" onclick="reportEvent('affiliate_click', {resource:'tokenizer_tool'}); return false;">Tokenizer Playground</a>
+            <a href="#" onclick="reportEvent('affiliate_click', {resource:'pricing_guide'}); return false;">AI Pricing Guide</a>
+        </div>
+        <p style="font-size:0.8rem; color:#64748b; margin-top:8px;">Some links are affiliate links. We may earn a small commission at no extra cost to you.</p>
+    </div>
+
+    <!-- Privacy Note -->
+    <div class="privacy-note">
+        <p>🔒 Privacy: Events may be counted anonymously for product improvement. No personal data collected. We use <code>reportEvent</code> for anonymous usage metrics.</p>
+        <div class="footer-meta">
+            <span>© 2025 PromptCost.dev — Free Developer Tool</span>
+            <span>v1.0 | <a href="#" style="color:#94a3b8; text-decoration:underline;" onclick="reportEvent('privacy_info', {}); return false;">Privacy</a></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ----- DOM refs -----
+        const promptEl = document.getElementById('prompt');
+        const modelEl = document.getElementById('model');
+        const outputTokensEl = document.getElementById('outputTokens');
+        const charCountEl = document.getElementById('charCount');
+        const liveTokenEstimateEl = document.getElementById('liveTokenEstimate');
+
+        const inputTokensEl = document.getElementById('inputTokens');
+        const outputTokensDisplayEl = document.getElementById('outputTokensDisplay');
+        const totalTokensEl = document.getElementById('totalTokens');
+        const inputCostEl = document.getElementById('inputCost');
+        const outputCostEl = document.getElementById('outputCost');
+        const totalCostEl = document.getElementById('totalCost');
+        const modelNameDisplayEl = document.getElementById('modelNameDisplay');
+
+        const resetBtn = document.getElementById('resetBtn');
+
+        // ----- Token estimation (simple heuristic: ~4 chars per token) -----
+        function estimateTokens(text) {
+            if (!text) return 0;
+            // Rough but functional: count words + punctuation, ~1.3 tokens per word
+            const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+            const chars = text.length;
+            // blend: ~1 token per 4 chars, but also ~1.3 tokens per word – use average
+            const byChars = Math.ceil(chars / 4);
+            const byWords = Math.ceil(words * 1.3);
+            return Math.max(1, Math.round((byChars + byWords) / 2));
+        }
+
+        // ----- Cost calculation -----
+        function calculate() {
+            const prompt = promptEl.value || '';
+            const inputTokens = estimateTokens(prompt);
+            const outputTokens = parseInt(outputTokensEl.value, 10) || 0;
+
+            const selectedOption = modelEl.options[modelEl.selectedIndex];
+            const costIn = parseFloat(selectedOption.dataset.costIn) || 0;
+            const costOut = parseFloat(selectedOption.dataset.costOut) || 0;
+            const modelName = selectedOption.text.split('—')[0].trim() || 'Unknown';
+
+            const inputCost = (inputTokens / 1000) * costIn;
+            const outputCost = (outputTokens / 1000) * costOut;
+            const totalCost = inputCost + outputCost;
+            const totalTokens = inputTokens + outputTokens;
+
+            // Update DOM
+            inputTokensEl.textContent = inputTokens.toLocaleString();
+            outputTokensDisplayEl.textContent = outputTokens.toLocaleString();
+            totalTokensEl.textContent = totalTokens.toLocaleString();
+            inputCostEl.textContent = `$${inputCost.toFixed(4)}`;
+            outputCostEl.textContent = `$${outputCost.toFixed(4)}`;
+            totalCostEl.textContent = `$${totalCost.toFixed(4)}`;
+            modelNameDisplayEl.textContent = modelName;
+
+            // Char count / token hint
+            const chars = prompt.length;
+            charCountEl.textContent = `Characters: ${chars} | Estimated tokens: ${inputTokens}`;
+            liveTokenEstimateEl.textContent = `~${inputTokens} tokens`;
+
+            // Report event (anonymous)
+            reportEvent('calculate', {
+                model: modelEl.value,
+                inputTokens: inputTokens,
+                outputTokens: outputTokens,
+                totalCost: totalCost.toFixed(6)
+            });
+        }
+
+        // ----- reportEvent -----
+        window.reportEvent = function(name, payload) {
+            if (window.ORGANISM_METRICS_ENDPOINT && typeof window.ORGANISM_METRICS_ENDPOINT === 'string') {
+                try {
+                    const body = JSON.stringify({ event: name, payload: payload, timestamp: new Date().toISOString() });
+                    fetch(window.ORGANISM_METRICS_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: body,
+                        keepalive: true
+                    }).catch(() => {});
+                } catch (e) {
+                    // silent
+                }
+            }
+        };
+
+        // ----- Reset -----
+        function resetDefaults() {
+            promptEl.value = 'Explain quantum computing in simple terms. Focus on superposition and entanglement.';
+            modelEl.value = 'gpt4turbo';
+            outputTokensEl.value = 500;
+            calculate();
+            reportEvent('reset', {});
+        }
+
+        // ----- Event listeners -----
+        promptEl.addEventListener('input', calculate);
+        modelEl.addEventListener('change', calculate);
+        outputTokensEl.addEventListener('input', calculate);
+        resetBtn.addEventListener('click', resetDefaults);
+
+        // ----- Initial calculation -----
+        calculate();
+
+        // ----- Optional: expose for debugging -----
+        window.debug = { calculate, estimateTokens };
+    })();
+</script>
+
+<section data-organism-discovery="hub" style="margin:32px auto 20px;max-width:1040px;padding:16px;border-top:1px solid #d9e2ec;color:#475569;font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <strong style="display:block;color:#0f172a;margin-bottom:6px">More free browser tools</strong>
+  <p style="margin:0 0 8px">This page is part of an autonomous micro-tool network. Explore the live tool directory and related utilities.</p>
+  <p style="margin:0"><a href="https://kingms888.github.io/do-digital-organism-index/" style="color:#0f766e;font-weight:700">Open the tool directory</a> </p>
+</section>
+</body>
+</html>
